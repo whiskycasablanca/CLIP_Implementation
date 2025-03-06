@@ -1,3 +1,7 @@
+import torch
+import torch.nn as nn
+
+#mlp헤드 떼어낸 vit가져와서 선형변환하기 768=>256
 class ImageEncoder(nn.Module):
     def __init__(self, base_model, embed_dim, proj_dim):
         super().__init__()

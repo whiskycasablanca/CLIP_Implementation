@@ -121,6 +121,17 @@ if __name__ == "__main__":
             torch.save(model.state_dict(), "best_clip_model.pth")
             print("Best model saved!")
     
+    # 학습/검증 손실 변화를 그래프로 출력
+    plt.figure(figsize=(8, 6))
+    plt.plot(range(1, num_epochs+1), train_loss_history, label="Train Loss")
+    plt.plot(range(1, num_epochs+1), val_loss_history, label="Validation Loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.title("Loss per Epoch")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+    
     # 테스트 루프: 저장된 모델을 로드해서 평가
     model.load_state_dict(torch.load("best_clip_model.pth"))
     model.eval()
@@ -142,18 +153,3 @@ if __name__ == "__main__":
             
     test_loss /= len(test_loader.dataset)
     print(f"Test Loss: {test_loss:.4f}")
-
-    # 학습/검증 손실 변화를 그래프로 출력
-    plt.figure(figsize=(8, 6))
-    plt.plot(range(1, num_epochs+1), train_loss_history, label="Train Loss")
-    plt.plot(range(1, num_epochs+1), val_loss_history, label="Validation Loss")
-    plt.xlabel("Epoch")
-    plt.ylabel("Loss")
-    plt.title("Loss per Epoch")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
-
-    # 학습이 완료된 모델을 저장
-    torch.save(model.state_dict(), "trained_CLIP.pth")
-    print("학습이 완료되어 모델을 'trained_CLIP.pth'로 저장했습니다.")

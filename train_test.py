@@ -133,3 +133,27 @@ for epoch in range(num_epochs):
         best_val_loss = val_loss
         torch.save(model.state_dict(), "best_model.pth")
         print("Best model saved.")
+
+ # === 2.3 Test phase ===
+# 저장된 모델 로드 (학습 시점에서 best_model.pth를 저장했다고 가정)
+model.load_state_dict(torch.load("best_model.pth"))
+model.eval()
+
+test_loss = 0.0
+with torch.no_grad():
+    for batch in test_loader:
+        images = batch["image"].to(device)
+        input_ids = batch["input_ids"].to(device)
+        mask = batch["mask"].to(device)
+
+        inputs = {
+            "image": images,
+            "input_ids": input_ids,
+            "mask": mask
+        }
+
+        loss = model(inputs)
+        test_loss += loss.item()
+
+test_loss /= len(test_loader)
+print(f"Test Loss: {test_loss:.4f}")

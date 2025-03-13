@@ -9,7 +9,7 @@ class ImageEncoder(nn.Module):
         self.model = base_model
 
         for param in self.model.parameters():
-            param.requires_grad = True
+            param.requires_grad = False #freezing 시키기
 
         self.projection = nn.Linear(embed_dim, proj_dim)
         self.layer_norm = nn.LayerNorm(proj_dim)

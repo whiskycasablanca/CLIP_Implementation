@@ -6,6 +6,8 @@ class TextEncoder(nn.Module):
     def __init__(self, embed_dim, proj_dim):    #인스턴스화 할 떄 입력차원과 출력차원을 입력으로 받음
         super().__init__()
         self.model = DistilBertModel.from_pretrained('distilbert-base-uncased')
+        for param in self.model.parameters():
+            param.requires_grad = False #freezing 시키기
         
         self.projection = nn.Linear(embed_dim, proj_dim)
         self.layer_norm = nn.LayerNorm(proj_dim)

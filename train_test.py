@@ -6,7 +6,7 @@ from CLIP import CLIPModel  # models.py 내의 CLIPModel
 import torchvision.transforms as T
 from dataset import Flickr8kDataset
 import matplotlib.pyplot as plt
-import tqdm
+from tqdm import tqdm
 
 
 # 토크나이저와 이미지 전처리 정의
@@ -29,7 +29,7 @@ datasets = {
         tokenizer=tokenizer ,  # 미리 정의한 토크나이저
         max_length=40
     )
-    for split_name, split_file in split_files
+    for split_name, split_file in split_files.items()
 }
 
 if __name__ == "__main__":
@@ -70,18 +70,23 @@ if __name__ == "__main__":
             images = batch["image"].to(device)
             input_ids = batch["input_ids"].to(device)
             masks = batch["mask"].to(device)
+            
+            inputs = {
+                "image": images,
+                "input_ids": input_ids,
+                "mask": masks
+            }
 
             optimizer.zero_grad()
 
-            # 모델의 forward가 loss를 반환한다고 가정
-            loss = model(images, input_ids, masks)
+            loss = model(inputs)
             loss.backward()
             optimizer.step()
 
             running_loss += loss.item() * images.size(0)
 
             # 10 스텝마다 현재 Loss 출력
-            if step % 10 == 0:
+            if step % 1 == 0:
                 pbar.set_postfix({"Loss": loss.item()})
                 
         epoch_train_loss = running_loss / len(train_loader.dataset)
@@ -96,7 +101,13 @@ if __name__ == "__main__":
                 input_ids = batch["input_ids"].to(device)
                 masks = batch["mask"].to(device)
                 
-                loss = model(images, input_ids, masks)
+                inputs = {
+                    "image": images,
+                    "input_ids": input_ids,
+                    "mask": masks
+                }
+
+                loss = model(inputs)
                 running_val_loss += loss.item() * images.size(0)
         
         epoch_val_loss = running_val_loss / len(val_loader.dataset)
@@ -120,7 +131,13 @@ if __name__ == "__main__":
             input_ids = batch["input_ids"].to(device)
             masks = batch["mask"].to(device)
             
-            loss = model(images, input_ids, masks)
+            inputs = {
+                "image": images,
+                "input_ids": input_ids,
+                "mask": masks
+            }
+
+            loss = model(inputs)
             test_loss += loss.item() * images.size(0)
             
     test_loss /= len(test_loader.dataset)

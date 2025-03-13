@@ -1,18 +1,13 @@
-# device 설정
 import torch
-from torch import nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-#from datasets import load_dataset
-import torchvision.transforms as transforms
 from transformers import DistilBertTokenizer
-from models import CLIPModel  # models.py 내의 CLIPModel
-from PIL import Image
-from tqdm import tqdm
-from text_encoder import TextEncoder
+from CLIP import CLIPModel  # models.py 내의 CLIPModel
 import torchvision.transforms as T
 from dataset import Flickr8kDataset
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+import matplotlib.pyplot as plt
+import tqdm
+
 
 # 토크나이저와 이미지 전처리 정의
 tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
@@ -23,113 +18,125 @@ transform = T.Compose([
                 std=[0.26862954, 0.26130258, 0.27577711])
 ])
 
-# train split 파일: Flickr_8k.testImages.txt (이미지 파일명만 한 줄씩)
-train_dataset = Flickr8kDataset(
-    img_folder='images',
-    caption_file='captions.txt',
-    split_file='Flickr_8k.trainImages.txt',  # 분할 파일 경로 지정
-    transform=transform,  # 미리 정의한 transform
-    tokenizer=tokenizer ,  # 미리 정의한 토크나이저
-    max_length=40
-)
+# split된 데이터셋 생성성
+split_files = {'train' : 'Flickr_8k.trainImages.txt', 'validation' : 'Flickr_8k.devImages.txt', 'test' : 'Flickr_8k.testImages.txt'}
+datasets = {
+    split_name : Flickr8kDataset(
+        img_folder='images',
+        caption_file='captions.txt',
+        split_file=split_file,  # 분할 파일 경로 지정
+        transform=transform,  # 미리 정의한 transform
+        tokenizer=tokenizer ,  # 미리 정의한 토크나이저
+        max_length=40
+    )
+    for split_name, split_file in split_files
+}
 
-train_loader = DataLoader(train_dataset, batch_size=32, shuffle=False, num_workers=4)
-
-# validation split 파일: Flickr_8k.testImages.txt (이미지 파일명만 한 줄씩)
-val_dataset = Flickr8kDataset(
-    img_folder='images',
-    caption_file='captions.txt',
-    split_file='Flickr_8k.devImages.txt',  # 분할 파일 경로 지정
-    transform=transform,  # 미리 정의한 transform
-    tokenizer=tokenizer ,  # 미리 정의한 토크나이저
-    max_length=40
-)
-
-val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=4)
-
-
-
-# test split 파일: Flickr_8k.testImages.txt (이미지 파일명만 한 줄씩)
-test_dataset = Flickr8kDataset(
-    img_folder='images',
-    caption_file='captions.txt',
-    split_file='Flickr_8k.testImages.txt',  # 분할 파일 경로 지정
-    transform=transform,  # 미리 정의한 transform
-    tokenizer=tokenizer ,  # 미리 정의한 토크나이저
-    max_length=40
-)
-
-test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False, num_workers=4)
-
-# 예시: 간단한 CLIP-like 모델 가정 (직접 구현한 CLIPModel이 있다고 가정)
-# from model import CLIPModel  # 이미 구현되어 있다면 import
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-model = CLIPModel().to(device)  # 사용 중인 CLIP 모델 클래스로 교체
-optimizer = optim.Adam(model.parameters(), lr=1e-4)
-
-for batch in test_loader:
-    print("Image shape:", batch["image"].shape)
-    print("Input IDs shape:", batch["input_ids"].shape)
-    print("Mask shape:", batch["mask"].shape)
-    break  # 첫 배치만 확인 break
-
-
-num_epochs = 5  # 원하는 에폭 수
-best_val_loss = float('inf')
-
-for epoch in range(num_epochs):
-    # === 2.1 Training phase ===
-    model.train()  # 학습 모드
-    train_loss = 0.0
-    for batch in train_loader:
-        images = batch["image"].to(device)
-        input_ids = batch["input_ids"].to(device)
-        mask = batch["mask"].to(device)
-
-        # 모델에 입력할 딕셔너리 구성 (CLIPModel의 forward가 이를 받도록 설계)
-        inputs = {
-            "image": images,
-            "input_ids": input_ids,
-            "mask": mask
-        }
-
-        # forward & loss 계산
-        loss = model(inputs)
-
-        # 역전파 & 옵티마이저 스텝
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
-        train_loss += loss.item()
+if __name__ == "__main__":
     
-    train_loss /= len(train_loader)
+    # 디바이스 지정
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    
+    # DataLoader 생성
+    train_loader = DataLoader(datasets['train'], batch_size=32, shuffle=False, num_workers=4)
+    val_loader = DataLoader(datasets['validation'], batch_size=32, shuffle=False, num_workers=4)
+    test_loader = DataLoader(datasets['test'], batch_size=32, shuffle=False, num_workers=4)
 
-    # === 2.2 Validation phase ===
-    model.eval()  # 평가 모드
-    val_loss = 0.0
-    with torch.no_grad():
-        for batch in val_loader:
+    # CLIP 모델 생성
+    model = CLIPModel()
+
+    # Optimizer 생성
+    optimizer = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=0.01)
+
+    # 학습 진행
+    num_epochs = 5  # 원하는 에폭 수
+    best_val_loss = float('inf')
+
+    # 손실 기록용 리스트
+    train_loss_history = []
+    val_loss_history = []
+
+    # 학습 루프
+    for epoch in range(num_epochs):
+        model.train()
+        running_loss = 0.0
+        step = 0
+
+        # tqdm progress bar로 학습 배치 진행 상황 표시
+        pbar = tqdm(train_loader, desc=f"Epoch [{epoch+1}/{num_epochs}]")
+        for batch in pbar:
+            step += 1
+            # 배치 데이터를 디바이스로 이동
             images = batch["image"].to(device)
             input_ids = batch["input_ids"].to(device)
-            mask = batch["mask"].to(device)
+            masks = batch["mask"].to(device)
 
-            inputs = {
-                "image": images,
-                "input_ids": input_ids,
-                "mask": mask
-            }
+            optimizer.zero_grad()
 
-            loss = model(inputs)
-            val_loss += loss.item()
-    val_loss /= len(val_loader)
+            # 모델의 forward가 loss를 반환한다고 가정
+            loss = model(images, input_ids, masks)
+            loss.backward()
+            optimizer.step()
 
-    print(f"[Epoch {epoch+1}/{num_epochs}] Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
+            running_loss += loss.item() * images.size(0)
 
-    # === 2.3 모델 체크포인트 저장(옵션) ===
-    if val_loss < best_val_loss:
-        best_val_loss = val_loss
-        torch.save(model.state_dict(), "best_model.pth")
-        print("Best model saved.")
+            # 10 스텝마다 현재 Loss 출력
+            if step % 10 == 0:
+                pbar.set_postfix({"Loss": loss.item()})
+                
+        epoch_train_loss = running_loss / len(train_loader.dataset)
+        train_loss_history.append(epoch_train_loss)
+
+        # 검증 루프
+        model.eval()
+        running_val_loss = 0.0
+        with torch.no_grad():
+            for batch in val_loader:
+                images = batch["image"].to(device)
+                input_ids = batch["input_ids"].to(device)
+                masks = batch["mask"].to(device)
+                
+                loss = model(images, input_ids, masks)
+                running_val_loss += loss.item() * images.size(0)
+        
+        epoch_val_loss = running_val_loss / len(val_loader.dataset)
+        val_loss_history.append(epoch_val_loss)
+        
+        print(f"\nEpoch [{epoch+1}/{num_epochs}] Train Loss: {epoch_train_loss:.4f}, Val Loss: {epoch_val_loss:.4f}")
+        
+        # 검증 손실이 개선되면 모델 저장
+        if epoch_val_loss < best_val_loss:
+            best_val_loss = epoch_val_loss
+            torch.save(model.state_dict(), "best_clip_model.pth")
+            print("Best model saved!")
+    
+    # 테스트 루프: 저장된 모델을 로드해서 평가
+    model.load_state_dict(torch.load("best_clip_model.pth"))
+    model.eval()
+    test_loss = 0.0
+    with torch.no_grad():
+        for batch in test_loader:
+            images = batch["image"].to(device)
+            input_ids = batch["input_ids"].to(device)
+            masks = batch["mask"].to(device)
+            
+            loss = model(images, input_ids, masks)
+            test_loss += loss.item() * images.size(0)
+            
+    test_loss /= len(test_loader.dataset)
+    print(f"Test Loss: {test_loss:.4f}")
+
+    # 학습/검증 손실 변화를 그래프로 출력
+    plt.figure(figsize=(8, 6))
+    plt.plot(range(1, num_epochs+1), train_loss_history, label="Train Loss")
+    plt.plot(range(1, num_epochs+1), val_loss_history, label="Validation Loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.title("Loss per Epoch")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+    # 학습이 완료된 모델을 저장
+    torch.save(model.state_dict(), "trained_CLIP.pth")
+    print("학습이 완료되어 모델을 'trained_CLIP.pth'로 저장했습니다.")

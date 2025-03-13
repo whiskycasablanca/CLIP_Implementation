@@ -21,7 +21,7 @@ class CLIPModel(nn.Module):
         self.text_encoder = TextEncoder(embed_dim=768, proj_dim=256)
         self.temperature = nn.Parameter(torch.ones([])*np.log(1/7)).to(self.device)
 
-    def forward(self, x):   #인스턴스 이용할때 (이미지, input_ids, mask)를 key로 하는 딕셔너리를 입력으로 받아 loss계산함
+    def forward(self, x, return_logits=False):   #인스턴스 이용할때 (이미지, input_ids, mask)를 key로 하는 딕셔너리를 입력으로 받아 loss계산함
         I_t = self.image_encoder(x["image"])
         T_t = self.text_encoder(x["input_ids"], x["mask"])
 
@@ -33,5 +33,7 @@ class CLIPModel(nn.Module):
         loss_T = F.cross_entropy(logits, labels)
 
         loss = (loss_I + loss_T)/2.0 
-
-        return loss #, logits => 필요시 이것도 리턴하자
+        if not return_logits:
+            return loss #, logits => 필요시 이것도 리턴하자
+        else:
+            return loss, logits

@@ -25,6 +25,10 @@ class CLIPModel(nn.Module):
         I_t = self.image_encoder(x["image"])
         T_t = self.text_encoder(x["input_ids"], x["mask"])
 
+        # L2 정규화 적용
+        I_t = F.normalize(I_t, p=2, dim=1)
+        T_t = F.normalize(T_t, p=2, dim=1)
+
         logits = I_t@T_t.T * torch.exp(self.temperature)
 
         labels = torch.arange(I_t.size(0)).to(self.device)

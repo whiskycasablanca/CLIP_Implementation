@@ -9,7 +9,7 @@ from image_encoder import ImageEncoder
 from text_encoder import TextEncoder
 
 class CLIPModel(nn.Module):
-    def __init__(self):     #생성시 입력 없음
+    def __init__(self):    
         super().__init__()
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         # 사전 학습된 ViT-B/16 모델 불러오기
@@ -38,6 +38,6 @@ class CLIPModel(nn.Module):
 
         loss = (loss_I + loss_T)/2.0 
         if not return_logits:
-            return loss #, logits => 필요시 이것도 리턴하자
+            return loss 
         else:
             return loss, logits

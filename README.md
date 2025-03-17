@@ -222,6 +222,7 @@ Training was carried out for up to 30 epochs, with early stopping observed at ar
 
 ## **Experimental Results**
 
+
 <p align="center">
   <figure style="display: inline-block; text-align: center; margin: 0 10px;">
     <img src="readme_images/loss_finetuned.png" width="45%">
@@ -232,6 +233,19 @@ Training was carried out for up to 30 epochs, with early stopping observed at ar
     <figcaption>Frozen</figcaption>
   </figure>
 </p>
+
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="readme_images/loss_finetuned.png" width="45%"><br>
+      Fine-tuned
+    </td>
+    <td align="center">
+      <img src="readme_images/loss_frozen.png" width="45%"><br>
+      Frozen
+    </td>
+  </tr>
+</table>
 
          fine-tuned                                                               fine-tuned x
 

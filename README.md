@@ -227,11 +227,11 @@ Training was carried out for up to 30 epochs, with early stopping observed at ar
 <table align="center">
   <tr>
     <td align="center">
-      <img src="readme_images/loss_finetuned.png" width="60%"><br>
+      <img src="readme_images/loss_finetuned.png" width="80%"><br>
       Fine-tuned
     </td>
     <td align="center">
-      <img src="readme_images/loss_frozen.png" width="60%"><br>
+      <img src="readme_images/loss_frozen.png" width="80%"><br>
       Frozen
     </td>
   </tr>

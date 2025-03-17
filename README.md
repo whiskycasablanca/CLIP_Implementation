@@ -296,7 +296,7 @@ For further details and comparisons, please refer to the CLIP_Zeroshot_Test.ipyn
 
 - **MLP Head Performance Comparison:**
     
-    Investigate the performance difference between adding an MLP head to the image encoder versus using the zero-shot approach (i.e., using only the pre-trained encoders without additional training) across various image classification tasks and datasets.
+    Investigate the performance difference between adding an MLP head to the image encoder versus using the zero-shot approach across various image classification tasks and datasets.
     
 - **Exploring Alternative Image Encoders:**
     

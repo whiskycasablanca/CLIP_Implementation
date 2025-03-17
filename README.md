@@ -237,7 +237,6 @@ Training was carried out for up to 30 epochs, with early stopping observed at ar
   </tr>
 </table>
 
-         fine-tuned                                                               fine-tuned x
 
 | **Fine-Tuning Applied** | **Train Loss** | **Val Loss** | **Val Top-1** | **Val Top-5** | **Test Loss** | **Test Top-1 Accuracy** | **Test Top-5 Accuracy** |
 | --- | --- | --- | --- | --- | --- | --- | --- |

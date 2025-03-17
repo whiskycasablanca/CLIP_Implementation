@@ -1,4 +1,4 @@
-# **CLIP Implementation Project**
+# **🦀CLIP Implementation Project**
 
 This project aims to understand the working principles of **CLIP (Contrastive Language-Image Pre-training)** and implement it in a local environment to perform zero-shot classification experiments on a small-scale dataset. Pre-trained encoders (Image: ViT, Text: DistilBERT) are utilized to validate the image-text alignment effect, and various hyperparameter optimization and normalization techniques are applied.
 
@@ -223,8 +223,14 @@ Training was carried out for up to 30 epochs, with early stopping observed at ar
 ## **Experimental Results**
 
 <p align="center">
-  <img src="readme_images/loss_finetuned.png" width="45%">
-  <img src="readme_images/loss_frozen.png" width="45%">
+  <figure style="display: inline-block; text-align: center; margin: 0 10px;">
+    <img src="readme_images/loss_finetuned.png" width="45%">
+    <figcaption>Fine-tuned</figcaption>
+  </figure>
+  <figure style="display: inline-block; text-align: center; margin: 0 10px;">
+    <img src="readme_images/loss_frozen.png" width="45%">
+    <figcaption>Frozen</figcaption>
+  </figure>
 </p>
 
          fine-tuned                                                               fine-tuned x
@@ -246,7 +252,7 @@ However, overfitting is observed in both cases: while the training loss continue
 
 Zero-shot prediction evaluates how well a model can generalize to labels it has never been trained on. Without any additional MLP heads or extra label-image examples, the model uses its pre-trained image and text encoders to directly predict new classes.
 
-<img src="readme_images/cat.png" width="60%">
+<img src="readme_images/cat.png" width="35%">
 <img src="readme_images/cat_logit.png" width="60%">
 
 
@@ -256,8 +262,8 @@ The example above shows a cat image, with the model using the text prompt “a p
 
 We performed zero-shot classification experiments on the CIFAR-10 dataset by applying the prompt "a photo of" for each of the 10 class labels.
 
-<img src="readme_images/zero-shot1.png" width="60%">
-<img src="readme_images/zero-shot2.png" width="60%">
+<img src="readme_images/zero-shot1.png" width="80%">
+<img src="readme_images/zero-shot2.png" width="80%">
 
 ## **Results:**
 
